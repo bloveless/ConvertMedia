@@ -1,3 +1,3 @@
 #! /bin/bash
 
-tail -f logs/convertMedia.error.log
+tail -f /var/downloads/scripts/ConvertMedia/logs/convertMedia.error.log

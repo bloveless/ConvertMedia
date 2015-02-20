@@ -6,7 +6,7 @@ import subprocess, re, os
 # The directory where all the log files will be written to
 LOGDIR = "/var/downloads/scripts/ConvertMedia/logs/"
 # Any log messages will be written to this file
-QUEUELOG = LOGDIR+"convertMedia.queue.log"
+MESSAGELOG = LOGDIR+"convertMedia.message.log"
 # STDERR from HandBrakeCLI will be written here. There is quite a bit of diagnostic information in here
 ERRORLOG = LOGDIR+"convertMedia.error.log"
 # STDOUT from HandBrakeCLI will be written here. This is simply the progress of the currently running conversion.
@@ -14,10 +14,15 @@ PROGRESSLOG = LOGDIR+"convertMedia.progress.log"
 # After the conversion is completed the files will be moved to this directory. Nothing gets deleted.
 COMPLETEDPATH = "/var/nas/PreConverted/"
 
+# Create the logs directory if it doesn't already exist
+if not os.path.exists(LOGDIR):
+	os.makedirs(LOGDIR)
+
 def log(message):
 	print message
-	with open(QUEUELOG, "a") as queue_log:
-		queue_log.write(message+"\r\n")
+	# Open the message log and create it if it doesn't already exist
+	with open(MESSAGELOG, "a+") as message_log:
+		message_log.write(message+"\r\n")
 
 def convert_video(file_path, requested_file_size):
 	file_info = subprocess.check_output(['file', file_path])
@@ -50,7 +55,8 @@ def convert_video(file_path, requested_file_size):
 		if video_length is not 0:
 			kbps = ((( requested_file_size * 1000 ) / video_length ) * 8 )
 			log("Using kbps: "+str(kbps))
-			with open(PROGRESSLOG, 'a') as progress_log, open(ERRORLOG, 'a') as error_log:
+			# Open the progress log and error log. This will create them if they don't exist
+			with open(PROGRESSLOG, 'a+') as progress_log, open(ERRORLOG, 'a+') as error_log:
 				conversion = subprocess.Popen(['HandBrakeCLI', '--preset', 'Normal', '--two-pass', '-b', str(kbps), '-i', file_path, '-o', file_path+'.mp4'], stdout=progress_log, stderr=error_log)
 				stdout, stderr = conversion.communicate()
 				# If the conversion returns a 0 then move the file to the PreConverted folder
